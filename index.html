@@ -31,7 +31,151 @@ body{background:#fff}
 <a href="#traction" class="ghost">See traction ›</a>
 </div>
 </div>
-</header><section class="mx-auto max-w-6xl px-6 py-24"><h2 class="text-center text-3xl font-bold tracking-tight md:text-5xl">Easy from the first tap.</h2><div class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><div class="rounded-lg bg-secondary p-7"><h3 class="text-lg font-bold">Loans for women’s groups</h3><p class="mt-2 text-sm text-muted-foreground">Easy access to credit, together.</p></div><div class="rounded-lg bg-secondary p-7"><h3 class="text-lg font-bold">Credit score groups</h3><p class="mt-2 text-sm text-muted-foreground">Using proprietary technology.</p></div><div class="rounded-lg bg-secondary p-7"><h3 class="text-lg font-bold">Money in hours</h3><p class="mt-2 text-sm text-muted-foreground">A simple application, without branch visits.</p></div><div class="rounded-lg bg-secondary p-7"><h3 class="text-lg font-bold">Early payments, rewarded</h3><p class="mt-2 text-sm text-muted-foreground">We reward those who pay early.</p></div></div><p class="mt-10 text-center text-muted-foreground"><span class="text-2xl font-extrabold text-foreground">8<!-- -->%</span> per month on what’s still owed. No deposit.</p><style>
+</header><section class="bora-reel" aria-labelledby="bora-reel-title">
+<style>
+.bora-reel{position:relative;overflow:hidden;container-type:size;height:clamp(440px,62vw,620px);background:#fff}
+.bora-reel-band{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s}
+.bora-reel-band.is-ready{opacity:1}
+.bora-reel-tile{position:absolute;transform-style:preserve-3d}
+.bora-reel-slice{position:absolute;top:0;overflow:hidden;background:#f1f1ef}
+.bora-reel-slice img{position:absolute;top:0;max-width:none;object-fit:cover}
+.bora-reel-copy{position:relative;z-index:1;padding:3.5rem 1.5rem 0;text-align:center}
+.bora-reel-copy h2{margin:0 auto;max-width:40rem;font-size:clamp(1.75rem,4vw,3rem);font-weight:800;line-height:1.08;letter-spacing:-.02em}
+@media (prefers-reduced-motion:reduce){.bora-reel-tile{animation-play-state:paused!important}}
+</style>
+<div class="bora-reel-band" aria-hidden="true"></div>
+<div class="bora-reel-copy"><h2 id="bora-reel-title">For the women who keep Kenya’s markets running.</h2></div>
+<script>
+/* Curved photo reel: a vanilla port of the "Tilted Grid Hero" component.
+ * One row of photos streams right to left around the inside of a cylinder.
+ * Each tile is cut into vertical strips, each a flat facet of the curve, and
+ * one rotateY animation per tile carries it along the arc. A tile takes its
+ * next photo each time it wraps, out of sight. */
+(function () {
+  var root = document.querySelector(".bora-reel");
+  if (!root) return;
+  var band = root.querySelector(".bora-reel-band");
+
+  var IMAGES = [
+    "assets/reel-fruit-seller.jpg",
+    "assets/reel-rice-sellers.jpg"
+  ];
+  var SPEED = 4;          // seconds for the row to advance one tile
+  var TILE_HEIGHT = 34;   // % of the section's height
+  var ASPECT = 16 / 9;
+  var GAP = 6;            // % of a tile's height
+  var AXIS = 62;          // vertical centre of the row, % of the section
+  var FADE = 12;          // width of the fade at each end, % of the width
+  var BEND = (80 * Math.PI) / 180;
+  var SLICES = 16, CAMERA = 1.6, MAX_WIDTH = 55;
+
+  function arc(b) { return (CAMERA - 1 + Math.cos(b)) / (2 * CAMERA * Math.sin(b)); }
+  function round(n) { return +n.toFixed(4); }
+  function deg(rad) { return (rad * 180) / Math.PI; }
+
+  function measure(width, height) {
+    var h = Math.min((TILE_HEIGHT / 100) * height, ((MAX_WIDTH / 100) * width) / ASPECT);
+    var radius = width * arc(BEND);
+    if (!(h > 0) || !(radius > 0)) return null;
+    var unit = deg(h / radius);
+    var pitch = (ASPECT + GAP / 100) * unit;
+    var limit = deg(BEND) + (ASPECT * unit) / 2;
+    var columns = Math.min(60, Math.max(2, Math.ceil((2 * limit) / pitch)));
+    var sweep = round((columns * pitch) / 2);
+    return { columns: columns, sweep: sweep, unit: round(unit), limit: round(Math.min(sweep, limit)) };
+  }
+
+  var r = 100 * arc(BEND);
+  var radius = +r.toFixed(3) + "cqw";
+  function u(n) {
+    return "calc(" + round(n) + " * min(" + TILE_HEIGHT + "cqh, " + round(MAX_WIDTH / ASPECT) + "cqw))";
+  }
+  function turn(d) {
+    return "translateZ(" + radius + ") rotateY(" + round(d) + "deg) translateZ(-" + radius + ")";
+  }
+
+  var mask = "linear-gradient(90deg,transparent,#000 " + FADE + "%,#000 " + (100 - FADE) + "%,transparent)";
+  band.style.perspective = +(r * CAMERA).toFixed(3) + "cqw";
+  band.style.perspectiveOrigin = "50% " + AXIS + "%";
+  band.style.maskImage = mask;
+  band.style.webkitMaskImage = mask;
+
+  IMAGES.forEach(function (src) { new Image().src = src; });
+
+  var style = document.createElement("style");
+  root.appendChild(style);
+  var current = null, build = 0;
+
+  function render(L) {
+    current = L;
+    var name = "bora-reel-orbit-" + ++build;
+    var hide = round(((L.sweep - L.limit) / (2 * L.sweep || 1)) * 100);
+    style.textContent =
+      "@keyframes " + name + "{from{transform:" + turn(-L.sweep) + "}to{transform:" + turn(L.sweep) + "}" +
+      "0%," + hide + "%," + (100 - hide) + "%,100%{visibility:hidden}" +
+      (hide + 0.001) + "%," + (100 - hide - 0.001) + "%{visibility:visible}}";
+
+    var share = ASPECT / SLICES;
+    var duration = L.columns * SPEED;
+    band.textContent = "";
+
+    for (var t = 0; t < L.columns; t++) {
+      (function (t) {
+        var first = L.columns - 1 - t;
+        var tile = document.createElement("div");
+        tile.className = "bora-reel-tile";
+        tile.style.left = "calc(50% - " + u(ASPECT / 2) + ")";
+        tile.style.top = "calc(" + AXIS + "% - " + u(0.5) + ")";
+        tile.style.width = u(ASPECT);
+        tile.style.height = u(1);
+        tile.style.animation = name + " " + duration + "s linear " + -t * SPEED + "s infinite";
+
+        var imgs = [];
+        for (var k = 0; k < SLICES; k++) {
+          var slice = document.createElement("div");
+          slice.className = "bora-reel-slice";
+          slice.style.left = u((ASPECT - share) / 2);
+          slice.style.width = k === SLICES - 1 ? u(share) : "calc(" + u(share) + " + 1px)";
+          slice.style.height = u(1);
+          slice.style.transform = turn((ASPECT / 2 - (k + 0.5) * share) * L.unit);
+          if (k === 0) slice.style.borderRadius = "8px 0 0 8px";
+          if (k === SLICES - 1) slice.style.borderRadius = "0 8px 8px 0";
+          var img = document.createElement("img");
+          img.alt = "";
+          img.draggable = false;
+          img.style.left = u(-k * share);
+          img.style.width = u(ASPECT);
+          img.style.height = u(1);
+          slice.appendChild(img);
+          tile.appendChild(slice);
+          imgs.push(img);
+        }
+
+        function show(n) {
+          var src = IMAGES[n % IMAGES.length];
+          imgs.forEach(function (img) { img.src = src; });
+        }
+        show(first);
+        tile.addEventListener("animationiteration", function (e) {
+          // elapsedTime counts whole loops, missed events included.
+          show(Math.round(e.elapsedTime / duration) * L.columns + first);
+        });
+        band.appendChild(tile);
+      })(t);
+    }
+    band.classList.add("is-ready");
+  }
+
+  new ResizeObserver(function (entries) {
+    var box = entries[0].contentRect;
+    var next = measure(box.width, box.height);
+    if (!next) return;
+    if (current && current.columns === next.columns && current.sweep === next.sweep && current.unit === next.unit) return;
+    render(next);
+  }).observe(root);
+})();
+</script>
+</section><section class="mx-auto max-w-6xl px-6 py-24"><h2 class="text-center text-3xl font-bold tracking-tight md:text-5xl">Easy from the first tap.</h2><div class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><div class="rounded-lg bg-secondary p-7"><h3 class="text-lg font-bold">Loans for women’s groups</h3><p class="mt-2 text-sm text-muted-foreground">Easy access to credit, together.</p></div><div class="rounded-lg bg-secondary p-7"><h3 class="text-lg font-bold">Credit score groups</h3><p class="mt-2 text-sm text-muted-foreground">Using proprietary technology.</p></div><div class="rounded-lg bg-secondary p-7"><h3 class="text-lg font-bold">Money in hours</h3><p class="mt-2 text-sm text-muted-foreground">A simple application, without branch visits.</p></div><div class="rounded-lg bg-secondary p-7"><h3 class="text-lg font-bold">Early payments, rewarded</h3><p class="mt-2 text-sm text-muted-foreground">We reward those who pay early.</p></div></div><p class="mt-10 text-center text-muted-foreground"><span class="text-2xl font-extrabold text-foreground">8<!-- -->%</span> per month on what’s still owed. No deposit.</p><style>
 .bpc{margin-top:3.5rem;display:flex;flex-direction:column;align-items:center;--w:260px;--off:170px}
 .bpc-stage{position:relative;width:100%;height:calc(var(--w) * 19.5 / 9 + 20px);touch-action:pan-y;user-select:none;cursor:grab}
 .bpc-stage:active{cursor:grabbing}

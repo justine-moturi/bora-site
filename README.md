@@ -19,3 +19,13 @@ python3 -m http.server 8000
 ```
 
 Then open http://localhost:8000.
+
+## Rebuilding from the working copy
+
+The page is edited in the working copy (`Bora — Microlending for Kenya's women's groups.html` in its `_files` folder), then rebuilt into this repo:
+
+```sh
+python3 tools/build_site.py "<path to the _files folder>" .
+```
+
+The script strips the Lovable scripts and badge, swaps the contact form for an "Email us" button, rewrites asset paths to `assets/`, and copies only the assets the page uses.
