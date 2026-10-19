@@ -1,0 +1,9 @@
+# Netlify settings. The site is plain static files, so there is no build step.
+# Every push to `main` deploys to the live site.
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
