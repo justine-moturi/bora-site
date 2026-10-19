@@ -18,7 +18,7 @@ body{background:#fff}
 .bora-reel-slice img{position:absolute;top:0;max-width:none;object-fit:cover}
 @media (prefers-reduced-motion:reduce){.bora-reel-tile{animation-play-state:paused!important}}
 .bora-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,.8) 0%,rgba(0,0,0,.7) 35%,rgba(0,0,0,.35) 52%,rgba(0,0,0,0) 68%),linear-gradient(to top,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 45%)}
-@media (max-width:640px){.bora-hero::after{background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.7) 55%,rgba(0,0,0,.2) 85%)}}
+@media (max-width:640px){.bora-hero::after{background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.75) 45%,rgba(0,0,0,.35) 56%,rgba(0,0,0,0) 66%)}.bora-hero{height:clamp(680px,calc(100svh - 3.5rem),920px)}.bora-hero-inner{padding-bottom:2.5rem!important}.bora-hero-tagline{top:1.25rem!important}}
 .bora-hero-inner{position:relative;z-index:1;text-shadow:0 1px 3px rgba(0,0,0,.5),0 2px 16px rgba(0,0,0,.5);width:100%;max-width:72rem;margin:0 auto;padding:0 1.5rem 4.5rem}
 .bora-hero h1{max-width:40rem;font-size:clamp(2.5rem,5.2vw,4.5rem);font-weight:800;line-height:1.02;letter-spacing:-.025em}
 .bora-hero .eyebrow{font-size:.875rem;font-weight:600;letter-spacing:.02em;color:#fff}
@@ -55,13 +55,26 @@ body{background:#fff}
     "assets/reel-rice-sellers.jpg"
   ];
   var SPEED = 4;          // seconds for the row to advance one tile
-  var TILE_HEIGHT = 36;   // % of the section's height
+  var TILE_HEIGHT, AXIS, MAX_WIDTH;  // set per screen size in fit()
   var ASPECT = 16 / 9;
   var GAP = 6;            // % of a tile's height
-  var AXIS = 40;          // vertical centre of the row, % of the section
   var FADE = 12;          // width of the fade at each end, % of the width
   var BEND = (80 * Math.PI) / 180;
-  var SLICES = 16, CAMERA = 1.6, MAX_WIDTH = 55;
+  var SLICES = 16, CAMERA, r, radius;
+  // Phones: bigger tiles, sitting high in the open space under the tagline,
+  // clear of the headline and buttons below.
+  function fit(width) {
+    var small = width < 640;
+    TILE_HEIGHT = small ? 24 : 36;  // % of the section's height
+    AXIS = small ? 23 : 40;         // vertical centre of the row, % of the section
+    MAX_WIDTH = small ? 70 : 55;    // widest a tile can be, % of the section's width
+    // Camera distance as a multiple of the cylinder's radius. Further back on
+    // phones, so the ends swell less and stay clear of the text.
+    CAMERA = small ? 2.4 : 1.6;
+    r = 100 * arc(BEND);
+    radius = +r.toFixed(3) + "cqw";
+    band.style.perspective = +(r * CAMERA).toFixed(3) + "cqw";
+  }
 
   function arc(b) { return (CAMERA - 1 + Math.cos(b)) / (2 * CAMERA * Math.sin(b)); }
   function round(n) { return +n.toFixed(4); }
@@ -79,8 +92,6 @@ body{background:#fff}
     return { columns: columns, sweep: sweep, unit: round(unit), limit: round(Math.min(sweep, limit)) };
   }
 
-  var r = 100 * arc(BEND);
-  var radius = +r.toFixed(3) + "cqw";
   function u(n) {
     return "calc(" + round(n) + " * min(" + TILE_HEIGHT + "cqh, " + round(MAX_WIDTH / ASPECT) + "cqw))";
   }
@@ -89,8 +100,6 @@ body{background:#fff}
   }
 
   var mask = "linear-gradient(90deg,transparent,#000 " + FADE + "%,#000 " + (100 - FADE) + "%,transparent)";
-  band.style.perspective = +(r * CAMERA).toFixed(3) + "cqw";
-  band.style.perspectiveOrigin = "50% " + AXIS + "%";
   band.style.maskImage = mask;
   band.style.webkitMaskImage = mask;
 
@@ -102,6 +111,7 @@ body{background:#fff}
 
   function render(L) {
     current = L;
+    band.style.perspectiveOrigin = "50% " + AXIS + "%";
     var name = "bora-reel-orbit-" + ++build;
     var hide = round(((L.sweep - L.limit) / (2 * L.sweep || 1)) * 100);
     style.textContent =
@@ -162,9 +172,11 @@ body{background:#fff}
 
   new ResizeObserver(function (entries) {
     var box = entries[0].contentRect;
+    fit(box.width);
     var next = measure(box.width, box.height);
     if (!next) return;
-    if (current && current.columns === next.columns && current.sweep === next.sweep && current.unit === next.unit) return;
+    next.axis = AXIS;
+    if (current && current.columns === next.columns && current.sweep === next.sweep && current.unit === next.unit && current.axis === next.axis) return;
     render(next);
   }).observe(root);
 })();
