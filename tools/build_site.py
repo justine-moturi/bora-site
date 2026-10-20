@@ -56,6 +56,18 @@ s = re.sub(r"<!-- saved from url=.*?-->\n?", "", s, count=1)
 s = s.replace("&amp;#x27;", "&#x27;")
 s = re.sub(r' data-tsd-source="[^"]*"', "", s)
 
+# 6b. Search and link previews: canonical URL, and a preview image hosted on
+# this site instead of Lovable's storage.
+SITE = "https://boraapp.org/"
+s = re.sub(r'(<meta (?:property="og:image"|name="twitter:image") content=")[^"]*(")',
+           r"\1" + SITE + r"assets/social-preview.jpg\2", s)
+assert "r2.dev" not in s, "leftover Lovable preview image"
+s = cut(s, '<meta property="og:type" content="website">',
+        '<meta property="og:type" content="website">'
+        f'<meta property="og:url" content="{SITE}">'
+        f'<link rel="canonical" href="{SITE}">')
+s = s.replace('<link rel="apple-touch-icon"', '<link rel="icon" href="favicon.ico" sizes="48x48"><link rel="apple-touch-icon"', 1)
+
 # 7. Asset paths -> assets/.
 s = s.replace(PREFIX + "css2", "assets/fonts.css")
 s = s.replace(PREFIX, "assets/")
@@ -68,6 +80,7 @@ for name in used:
     src_name = "css2" if name == "fonts.css" else name
     shutil.copy2(os.path.join(src_dir, src_name), os.path.join(out_dir, "assets", name))
 
+shutil.copy2(os.path.join(src_dir, "social-preview.jpg"), os.path.join(out_dir, "assets", "social-preview.jpg"))
 open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8").write(s)
 print("index.html", len(s), "bytes")
 print("assets:", ", ".join(used))
