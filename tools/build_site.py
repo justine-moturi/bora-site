@@ -32,7 +32,8 @@ s = re.sub(r"<style>\s*#lovable-badge.*?</style>", "", s, count=1, flags=re.S)
 s = re.sub(r'<script defer="" src="[^"]*events\.[^"]*"[^>]*></script>', "", s, count=1)
 s = re.sub(r'<link rel="modulepreload"[^>]*>', "", s)
 s = cut(s, f'<link rel="icon" href="{LOVABLE}favicon.png" type="image/png">',
-        '<link rel="icon" href="assets/bora_logo.png" type="image/png">')
+        '<link rel="icon" href="assets/favicon.png" type="image/png" sizes="512x512">'
+        '<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">')
 assert "lovable.js" not in s and "index-D8ZG6fAO" not in s and "events.1248" not in s
 
 # 4. In-page links that pointed at the old preview site.
